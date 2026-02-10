@@ -4,18 +4,18 @@ services:
     runtime: docker
     plan: standard
     healthCheckPath: /health
-    dockerCommand: sh -c 'mkdir -p /data/.openclaw /home/node/.openclaw && rm -f /data/.openclaw/*.json /home/node/.openclaw/*.json && echo '"'"'{"gateway":{"mode":"local","controlUi":{"dangerouslyDisableDeviceAuth":true}}}'"'"' | tee /data/.openclaw/openclaw.json /home/node/.openclaw/openclaw.json && node dist/index.js gateway --bind lan --port 8080'    
+    dockerCommand: sh -c "mkdir -p /data/.openclaw /home/node/.openclaw && rm -f /data/.openclaw/*.json /home/node/.openclaw/*.json && echo '{\"gateway\":{\"mode\":\"local\",\"controlUi\":{\"dangerouslyDisableDeviceAuth\":true}}}' | tee /data/.openclaw/openclaw.json /home/node/.openclaw/openclaw.json && node dist/index.js gateway --bind lan --port 8080"
     envVars:
       - key: PORT
         value: "8080"
       - key: SETUP_PASSWORD
-        sync: false
+        sync: false          # prompts during deploy
       - key: OPENCLAW_STATE_DIR
         value: /data/.openclaw
       - key: OPENCLAW_WORKSPACE_DIR
         value: /data/workspace
-      - key: OPENCLAW_GATEWAY_TOKEN
-        generateValue: true
+      - key: OPENCLAW_GATEWAY_PASSWORD
+        sync: false          # prompts during deploy
     disk:
       name: openclaw-data
       mountPath: /data
