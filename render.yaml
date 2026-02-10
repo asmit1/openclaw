@@ -4,7 +4,7 @@ services:
     runtime: docker
     plan: standard
     healthCheckPath: /health
-    dockerCommand: sh /app/start.sh    
+    dockerCommand: Dockerfile.render    
     envVars:
       - key: PORT
         value: "8080"
