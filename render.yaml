@@ -3,8 +3,7 @@ services:
     name: openclaw
     runtime: docker
     plan: standard
-    healthCheckPath: /health
-    dockerfilePath: ./Dockerfile.render    
+    healthCheckPath: /health    
     envVars:
       - key: PORT
         value: "8080"
