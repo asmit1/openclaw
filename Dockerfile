@@ -47,3 +47,5 @@ USER node
 #   2. Override CMD: ["node","openclaw.mjs","gateway","--allow-unconfigured","--bind","lan"]
 CMD ["node", "openclaw.mjs", "gateway", "--allow-unconfigured"]
 ENV OPENCLAW_PUBLIC_PORT=8080
+ENV PORT=8080
+EXPOSE 8080
