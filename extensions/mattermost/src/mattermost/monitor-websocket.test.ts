@@ -1,4 +1,4 @@
-import type { RuntimeEnv } from "openclaw/plugin-sdk";
+import type { RuntimeEnv } from "openclaw/plugin-sdk/mattermost";
 import { describe, expect, it, vi } from "vitest";
 import {
   createMattermostConnectOnce,
@@ -185,24 +185,27 @@ describe("mattermost websocket monitor", () => {
       webSocketFactory: () => socket,
     });
 
-    socket.emitOpen();
-    socket.emitMessage(
-      Buffer.from(
-        JSON.stringify({
-          event: "reaction_added",
-          data: {
-            reaction: JSON.stringify({
-              user_id: "user-1",
-              post_id: "post-1",
-              emoji_name: "thumbsup",
-            }),
-          },
-        }),
-      ),
-    );
-    socket.emitClose(1000);
+    const connected = connectOnce();
+    queueMicrotask(() => {
+      socket.emitOpen();
+      socket.emitMessage(
+        Buffer.from(
+          JSON.stringify({
+            event: "reaction_added",
+            data: {
+              reaction: JSON.stringify({
+                user_id: "user-1",
+                post_id: "post-1",
+                emoji_name: "thumbsup",
+              }),
+            },
+          }),
+        ),
+      );
+      socket.emitClose(1000);
+    });
 
-    await connectOnce();
+    await connected;
 
     expect(onReaction).toHaveBeenCalledTimes(1);
     expect(onPosted).not.toHaveBeenCalled();

@@ -1,11 +1,12 @@
-import type { AgentMessage, StreamFn } from "@mariozechner/pi-agent-core";
 import crypto from "node:crypto";
 import path from "node:path";
+import type { AgentMessage, StreamFn } from "@mariozechner/pi-agent-core";
 import type { OpenClawConfig } from "../config/config.js";
 import { resolveStateDir } from "../config/paths.js";
 import { resolveUserPath } from "../utils.js";
 import { parseBooleanValue } from "../utils/boolean.js";
 import { safeJsonStringify } from "../utils/safe-json.js";
+import { redactImageDataForDiagnostics } from "./payload-redaction.js";
 import { getQueuedFileWriter, type QueuedFileWriter } from "./queued-file-writer.js";
 
 export type CacheTraceStage =
@@ -129,12 +130,18 @@ function stableStringify(value: unknown): string {
     });
   }
   if (Array.isArray(value)) {
-    return `[${value.map((entry) => stableStringify(entry)).join(",")}]`;
+    const serializedEntries: string[] = [];
+    for (const entry of value) {
+      serializedEntries.push(stableStringify(entry));
+    }
+    return `[${serializedEntries.join(",")}]`;
   }
   const record = value as Record<string, unknown>;
-  const keys = Object.keys(record).toSorted();
-  const entries = keys.map((key) => `${JSON.stringify(key)}:${stableStringify(record[key])}`);
-  return `{${entries.join(",")}}`;
+  const serializedFields: string[] = [];
+  for (const key of Object.keys(record).toSorted()) {
+    serializedFields.push(`${JSON.stringify(key)}:${stableStringify(record[key])}`);
+  }
+  return `{${serializedFields.join(",")}}`;
 }
 
 function digest(value: unknown): string {
@@ -192,7 +199,7 @@ export function createCacheTrace(params: CacheTraceInit): CacheTrace | null {
       event.systemDigest = digest(payload.system);
     }
     if (payload.options) {
-      event.options = payload.options;
+      event.options = redactImageDataForDiagnostics(payload.options) as Record<string, unknown>;
     }
     if (payload.model) {
       event.model = payload.model;
@@ -206,7 +213,7 @@ export function createCacheTrace(params: CacheTraceInit): CacheTrace | null {
       event.messageFingerprints = summary.messageFingerprints;
       event.messagesDigest = summary.messagesDigest;
       if (cfg.includeMessages) {
-        event.messages = messages;
+        event.messages = redactImageDataForDiagnostics(messages) as AgentMessage[];
       }
     }
 
